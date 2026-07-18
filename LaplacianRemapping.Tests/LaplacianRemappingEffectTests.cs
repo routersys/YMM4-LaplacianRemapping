@@ -420,6 +420,55 @@ public sealed class LaplacianRemappingEffectTests
     }
 
     [Fact]
+    public void SimulatePathMatchesFullRenderOnNarrowLuminanceRange()
+    {
+        using var pipeline = LaplacianRemappingPipeline.TryCreate();
+        if (pipeline is null)
+        {
+            Assert.Skip("Direct3D 12 is unavailable.");
+            return;
+        }
+
+        const int width = 128;
+        const int height = 128;
+        var source = new int[width * height];
+        for (var y = 8; y < height - 8; y++)
+        {
+            for (var x = 8; x < width - 8; x++)
+            {
+                var value = 24 + (((x / 4 + y / 4) & 1) == 0 ? 24 : 0) + 16 * x / width;
+                source[y * width + x] = unchecked((int)0xFF000000) | value << 16 | value << 8 | value;
+            }
+        }
+        var full = new int[source.Length];
+        var parameters = CreateParameters(detail: 1f, tone: -0.5f, threshold: 0.1f);
+        pipeline.Process(source, full, width, height, in parameters);
+
+        var device = GraphicsDevice.GetDefault();
+        using var sourceTexture = device.AllocateReadWriteTexture2D<Bgra32, Float4>(width, height);
+        var sourcePixels = new Bgra32[source.Length];
+        for (var index = 0; index < source.Length; index++)
+            sourcePixels[index].PackedValue = unchecked((uint)source[index]);
+        sourceTexture.CopyFrom(sourcePixels);
+
+        pipeline.Simulate(sourceTexture, width, height, in parameters);
+        Assert.True(pipeline.TryGetVisibleBounds(width, height, out var rect));
+        using var outputTexture = device.AllocateReadWriteTexture2D<Bgra32, Float4>(rect.Width, rect.Height);
+        pipeline.RenderVisible(sourceTexture, outputTexture, width, height, rect);
+        var result = new Bgra32[rect.Width * rect.Height];
+        outputTexture.CopyTo(result);
+
+        for (var y = 0; y < rect.Height; y++)
+        {
+            for (var x = 0; x < rect.Width; x++)
+            {
+                var expected = unchecked((uint)full[(rect.Y + y) * width + rect.X + x]);
+                Assert.Equal(expected, result[y * rect.Width + x].PackedValue);
+            }
+        }
+    }
+
+    [Fact]
     public void SimulateCachesStructureUntilInputsChange()
     {
         using var pipeline = LaplacianRemappingPipeline.TryCreate();

@@ -69,6 +69,31 @@ foreach (var quality in new[] { LaplacianRemappingQuality.Balanced, LaplacianRem
     stopwatch.Stop();
     Console.WriteLine($"structure recompute: {stopwatch.Elapsed.TotalMilliseconds:F2} ms");
 
+    var darkPixels = new Bgra32[source.Length];
+    for (var index = 0; index < source.Length; index++)
+    {
+        var pixel = source[index];
+        var r = ((pixel >> 16) & 255) / 4;
+        var g = ((pixel >> 8) & 255) / 4;
+        var b = (pixel & 255) / 4;
+        darkPixels[index].PackedValue = (uint)(pixel & unchecked((int)0xFF000000)) | (uint)(r << 16 | g << 8 | b);
+    }
+    using var darkTexture = device.AllocateReadWriteTexture2D<Bgra32, Float4>(width, height);
+    darkTexture.CopyFrom(darkPixels);
+    pipeline.Simulate(darkTexture, width, height, in parameters);
+    stopwatch.Restart();
+    pipeline.Simulate(darkTexture, width, height, parameters with { Detail = 0.6f });
+    stopwatch.Stop();
+    Console.WriteLine($"dark structure recompute: {stopwatch.Elapsed.TotalMilliseconds:F2} ms");
+    pipeline.Simulate(sourceTexture, width, height, parameters with { Detail = 0.6f });
+
+    stopwatch.Restart();
+    const int hitFrames = 200;
+    for (var frame = 0; frame < hitFrames; frame++)
+        pipeline.Simulate(sourceTexture, width, height, parameters with { Detail = 0.6f });
+    stopwatch.Stop();
+    Console.WriteLine($"cache-hit simulate: {stopwatch.Elapsed.TotalMilliseconds / hitFrames:F3} ms/frame");
+
     if (pipeline.TryGetVisibleBounds(width, height, out var rect))
     {
         using var rectOutput = device.AllocateReadWriteTexture2D<Bgra32, Float4>(rect.Width, rect.Height);
