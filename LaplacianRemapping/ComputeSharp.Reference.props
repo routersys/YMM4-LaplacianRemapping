@@ -1,0 +1,9 @@
+<Project>
+	<PropertyGroup>
+		<PrivateComputeSharpBuildProperties Condition="'$(BuildingSolutionFile)' != 'true'">CustomBeforeDirectoryBuildProps=$(MSBuildThisFileDirectory)ComputeSharp.Build.props;CustomAfterDirectoryBuildProps=$(MSBuildThisFileDirectory)ComputeSharp.Build.after.props</PrivateComputeSharpBuildProperties>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="$(MSBuildThisFileDirectory)..\ComputeSharp\src\ComputeSharp.Core\ComputeSharp.Core.csproj" SetConfiguration="Configuration=$(Configuration)" SetPlatform="Platform=AnyCPU" AdditionalProperties="$(PrivateComputeSharpBuildProperties)" GlobalPropertiesToRemove="SkipPluginDeploy" />
+		<ProjectReference Include="$(MSBuildThisFileDirectory)..\ComputeSharp\src\ComputeSharp\ComputeSharp.csproj" SetConfiguration="Configuration=$(Configuration)" SetPlatform="Platform=AnyCPU" AdditionalProperties="$(PrivateComputeSharpBuildProperties)" GlobalPropertiesToRemove="SkipPluginDeploy" />
+	</ItemGroup>
+</Project>

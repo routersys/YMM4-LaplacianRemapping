@@ -1,0 +1,14 @@
+<Project>
+	<PropertyGroup Condition="'$(MSBuildProjectName)' == 'ComputeSharp' or '$(MSBuildProjectName)' == 'ComputeSharp.Core'">
+		<BaseOutputPath>$(MSBuildProjectDirectory)\bin\LaplacianRemapping\</BaseOutputPath>
+		<BaseIntermediateOutputPath>$(MSBuildProjectDirectory)\obj\LaplacianRemapping\</BaseIntermediateOutputPath>
+		<MSBuildProjectExtensionsPath>$(MSBuildProjectDirectory)\obj\</MSBuildProjectExtensionsPath>
+		<DefaultItemExcludes>$(DefaultItemExcludes);$(MSBuildProjectDirectory)\obj\**</DefaultItemExcludes>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(MSBuildProjectName)' == 'ComputeSharp'">
+		<AssemblyName>LaplacianRemapping.ComputeSharp</AssemblyName>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(MSBuildProjectName)' == 'ComputeSharp.Core'">
+		<AssemblyName>LaplacianRemapping.ComputeSharp.Core</AssemblyName>
+	</PropertyGroup>
+</Project>
