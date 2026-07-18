@@ -1,0 +1,24 @@
+Key,Parameter,ja-jp,en-us,zh-cn,zh-tw,ko-kr,es-es,ar-sa,id-id
+LaplacianRemapping,,ローカルラプラシアン,Local Laplacian,局部拉普拉斯,局部拉普拉斯,로컬 라플라시안,Laplaciano local,لابلاسيان محلي,Laplacian Lokal
+BasicGroup,,基本,Basic,基本,基本,기본,Básico,أساسي,Dasar
+AdjustGroup,,調整,Adjustment,调整,調整,조정,Ajuste,الضبط,Penyesuaian
+Amount,,強さ,Amount,强度,強度,강도,Intensidad,الشدة,Intensitas
+AmountDescription,,効果の合成量です,Blend amount of the effect over the source,效果与源图像的混合量,效果與源圖像的混合量,효과의 합성량입니다,Cantidad de mezcla del efecto sobre la imagen,مقدار مزج التأثير فوق الصورة,Jumlah pencampuran efek di atas citra
+Quality,,品質,Quality,品质,品質,품질,Calidad,الجودة,Kualitas
+QualityDescription,,基準輝度のサンプル数を選びます。多いほど正確になります,Selects the number of reference luminance samples. More samples are more accurate,选择基准亮度的采样数。数量越多越精确,選擇基準亮度的取樣數。數量越多越精確,기준 휘도의 샘플 수를 선택합니다. 많을수록 정확해집니다,Selecciona el número de muestras de luminancia de referencia. Más muestras son más precisas,يحدد عدد عينات الإضاءة المرجعية. كلما زادت العينات زادت الدقة,Memilih jumlah sampel luminans referensi. Semakin banyak semakin akurat
+Detail,,ディテール,Detail,细节,細節,디테일,Detalle,التفاصيل,Detail
+DetailDescription,,しきい値未満の質感の増減です。正で強調し、負でエッジを保ったまま平滑化します,Boosts or reduces textures below the threshold. Positive values enhance and negative values smooth while preserving edges,增减低于阈值的质感。正值增强，负值在保留边缘的同时平滑,增減低於閾值的質感。正值增強，負值在保留邊緣的同時平滑,임계값 미만 질감의 증감입니다. 양수는 강조하고 음수는 에지를 유지한 채 평활화합니다,Aumenta o reduce las texturas por debajo del umbral. Los valores positivos realzan y los negativos suavizan conservando los bordes,يزيد أو يقلل الملمس دون العتبة. القيم الموجبة تعزز والسالبة تنعم مع الحفاظ على الحواف,Menambah atau mengurangi tekstur di bawah ambang. Nilai positif mempertegas dan nilai negatif menghaluskan sambil menjaga tepi
+Tone,,トーン,Tone,色调,色調,톤,Tono,الدرجة اللونية,Tona
+ToneDescription,,しきい値以上の明暗差の増減です。負で白飛びや黒潰れを圧縮し、正でコントラストを拡張します,Compresses or expands luminance differences above the threshold. Negative values recover highlights and shadows and positive values expand contrast,增减高于阈值的明暗差。负值压缩过曝与欠曝，正值扩展对比度,增減高於閾值的明暗差。負值壓縮過曝與欠曝，正值擴展對比度,임계값 이상 명암 차의 증감입니다. 음수는 하이라이트와 섀도를 압축하고 양수는 대비를 확장합니다,Comprime o expande las diferencias de luminancia por encima del umbral. Los valores negativos recuperan luces y sombras y los positivos expanden el contraste,يضغط أو يوسع فروق الإضاءة فوق العتبة. القيم السالبة تستعيد الإضاءات والظلال والموجبة توسع التباين,Menekan atau memperluas perbedaan luminans di atas ambang. Nilai negatif memulihkan sorotan dan bayangan dan nilai positif memperluas kontras
+Threshold,,しきい値,Threshold,阈值,閾值,임계값,Umbral,العتبة,Ambang
+ThresholdDescription,,ディテールとエッジを分ける輝度差のしきい値です,Luminance difference threshold that separates details from edges,区分细节与边缘的亮度差阈值,區分細節與邊緣的亮度差閾值,디테일과 에지를 구분하는 휘도 차 임계값입니다,Umbral de diferencia de luminancia que separa los detalles de los bordes,عتبة فرق الإضاءة التي تفصل التفاصيل عن الحواف,Ambang perbedaan luminans yang memisahkan detail dari tepi
+QualityBalanced,,標準,Balanced,标准,標準,표준,Estándar,قياسي,Standar
+QualityBalancedDescription,,サンプル数を抑えた設定です,Uses a reduced number of samples,减少采样数的设置,減少取樣數的設定,샘플 수를 줄인 설정입니다,Configuración con un número reducido de muestras,إعداد بعدد عينات مخفض,Pengaturan dengan jumlah sampel yang dikurangi
+QualityHigh,,高品質,High,高品质,高品質,고품질,Alta,عالية,Tinggi
+QualityHighDescription,,品質と処理量の基準設定です,The reference balance of quality and cost,品质与处理量的基准设置,品質與處理量的基準設定,품질과 처리량의 기준 설정입니다,Configuración de referencia entre calidad y coste,الإعداد المرجعي للتوازن بين الجودة والتكلفة,Pengaturan acuan antara kualitas dan beban proses
+QualityUltra,,最高品質,Ultra,最高品质,最高品質,최고 품질,Máxima,قصوى,Ultra
+QualityUltraDescription,,最大のサンプル数を使用します,Uses the largest number of samples,使用最大的采样数,使用最大的取樣數,최대 샘플 수를 사용합니다,Usa el mayor número de muestras,يستخدم أكبر عدد من العينات,Menggunakan jumlah sampel terbesar
+TagClarity,,明瞭度,Clarity,清晰度,清晰度,명료도,Claridad,الوضوح,Kejernihan
+TagTone,,トーン,Tone,色调,色調,톤,Tono,درجة لونية,Tona
+TagDetail,,質感,Texture,质感,質感,질감,Textura,ملمس,Tekstur
+UpdateAvailableMessage,,新しいバージョン {0} が公開されています。,A new version {0} is available.,新版本 {0} 已发布。,新版本 {0} 已發布。,새 버전 {0}이(가) 공개되었습니다.,La nueva versión {0} ya está disponible.,تم إصدار نسخة جديدة {0}.,Versi baru {0} telah dirilis.
