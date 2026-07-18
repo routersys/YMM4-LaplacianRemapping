@@ -26,6 +26,8 @@ internal static class LaplacianRemappingSettings
     public const int ScratchMinY = 3;
     public const int ScratchMaxX = 4;
     public const int ScratchMaxY = 5;
+    public const int ScratchLuminanceMinBits = 6;
+    public const int ScratchLuminanceMaxBits = 7;
 
     public static QualitySettings GetQuality(LaplacianRemappingQuality quality)
         => quality switch

@@ -132,10 +132,14 @@ internal sealed class LaplacianRemappingPipeline : IDisposable
             return false;
 
         var derived = Derive(in parameters);
+        var minBits = hashed[LaplacianRemappingSettings.ScratchLuminanceMinBits];
+        var maxBits = hashed[LaplacianRemappingSettings.ScratchLuminanceMaxBits];
+        var luminanceMin = minBits >= 0 && minBits <= maxBits ? BitConverter.Int32BitsToSingle(minBits) : 0f;
+        var luminanceMax = minBits >= 0 && minBits <= maxBits ? BitConverter.Int32BitsToSingle(maxBits) : 1f;
         using (ComputeContext context = _device.CreateComputeContext())
         {
             RecordLuminanceStage(in context, source, width, height);
-            RecordFilterStage(in context, in derived);
+            RecordFilterStage(in context, in derived, luminanceMin, luminanceMax);
         }
         _structureKey = key;
         return true;
@@ -182,7 +186,7 @@ internal sealed class LaplacianRemappingPipeline : IDisposable
         _structureKey = null;
         var derived = Derive(in parameters);
         RecordLuminanceStage(in context, source, width, height);
-        RecordFilterStage(in context, in derived);
+        RecordFilterStage(in context, in derived, 0f, 1f);
         RecordRenderStage(in context, source, output, new PixelRect(0, 0, width, height), width, height);
     }
 
@@ -200,7 +204,7 @@ internal sealed class LaplacianRemappingPipeline : IDisposable
         context.Barrier(_gaussian!);
     }
 
-    private void RecordFilterStage(in ComputeContext context, in DerivedValues derived)
+    private void RecordFilterStage(in ComputeContext context, in DerivedValues derived, float luminanceMin, float luminanceMax)
     {
         var gaussian = _gaussian!;
         var work = _work!;
@@ -226,6 +230,8 @@ internal sealed class LaplacianRemappingPipeline : IDisposable
         for (var sample = 0; sample < derived.SampleCount; sample++)
         {
             var gamma = sample * spacing;
+            if (gamma < luminanceMin - 2f * spacing || gamma > luminanceMax + 2f * spacing)
+                continue;
             context.For(_levelWidths[0], _levelHeights[0], new RemapShader(
                 gaussian, work, _levelWidths[0], _levelHeights[0],
                 gamma, derived.Sigma, derived.AlphaExponent, derived.Beta));

@@ -39,6 +39,8 @@ internal readonly partial struct InitScratchShader(
         scratch[3] = 2147483647;
         scratch[4] = -1;
         scratch[5] = -1;
+        scratch[6] = 2147483647;
+        scratch[7] = -1;
     }
 }
 
@@ -55,32 +57,72 @@ internal readonly partial struct HashBoundsShader(
     private readonly int width = width;
     private readonly int height = height;
 
+    [GroupShared(8)]
+    private static readonly int[] groupScratch = null!;
+
     public void Execute()
     {
+        if (GroupIds.Index == 0)
+        {
+            groupScratch[0] = 0;
+            groupScratch[1] = 0;
+            groupScratch[2] = 2147483647;
+            groupScratch[3] = 2147483647;
+            groupScratch[4] = -1;
+            groupScratch[5] = -1;
+            groupScratch[6] = 2147483647;
+            groupScratch[7] = -1;
+        }
+        Hlsl.GroupMemoryBarrierWithGroupSync();
+
         var x = ThreadIds.X;
         var y = ThreadIds.Y;
-        if (x >= width || y >= height)
-            return;
-
-        var pixel = source[new Int2(x, y)];
-        var packed = (uint)(pixel.W * 255f + 0.5f) << 24
-            | (uint)(pixel.X * 255f + 0.5f) << 16
-            | (uint)(pixel.Y * 255f + 0.5f) << 8
-            | (uint)(pixel.Z * 255f + 0.5f);
-        var mixed = packed * 0x9E3779B9u ^ (uint)(y * width + x) * 0x85EBCA6Bu;
-        mixed ^= mixed >> 16;
-        mixed *= 0xC2B2AE35u;
-        mixed ^= mixed >> 13;
-        Hlsl.InterlockedAdd(ref scratch[0], (int)mixed);
-        Hlsl.InterlockedXor(ref scratch[1], (int)(mixed * 0x9E3779B9u));
-
-        if (pixel.W > 0f)
+        if (x < width && y < height)
         {
-            Hlsl.InterlockedMin(ref scratch[2], x);
-            Hlsl.InterlockedMin(ref scratch[3], y);
-            Hlsl.InterlockedMax(ref scratch[4], x);
-            Hlsl.InterlockedMax(ref scratch[5], y);
+            var pixel = source[new Int2(x, y)];
+            var packed = (uint)(pixel.W * 255f + 0.5f) << 24
+                | (uint)(pixel.X * 255f + 0.5f) << 16
+                | (uint)(pixel.Y * 255f + 0.5f) << 8
+                | (uint)(pixel.Z * 255f + 0.5f);
+            var mixed = packed * 0x9E3779B9u ^ (uint)(y * width + x) * 0x85EBCA6Bu;
+            mixed ^= mixed >> 16;
+            mixed *= 0xC2B2AE35u;
+            mixed ^= mixed >> 13;
+            Hlsl.InterlockedAdd(ref groupScratch[0], (int)mixed);
+            Hlsl.InterlockedXor(ref groupScratch[1], (int)(mixed * 0x9E3779B9u));
+
+            var alpha = pixel.W;
+            var luminance = 0f;
+            if (alpha > 0f)
+            {
+                Hlsl.InterlockedMin(ref groupScratch[2], x);
+                Hlsl.InterlockedMin(ref groupScratch[3], y);
+                Hlsl.InterlockedMax(ref groupScratch[4], x);
+                Hlsl.InterlockedMax(ref groupScratch[5], y);
+
+                var r = Hlsl.Saturate(pixel.X / alpha);
+                var g = Hlsl.Saturate(pixel.Y / alpha);
+                var b = Hlsl.Saturate(pixel.Z / alpha);
+                luminance = r * LaplacianRemappingSettings.LuminanceWeightR
+                    + g * LaplacianRemappingSettings.LuminanceWeightG
+                    + b * LaplacianRemappingSettings.LuminanceWeightB;
+            }
+            var luminanceBits = (int)Hlsl.AsUInt(luminance);
+            Hlsl.InterlockedMin(ref groupScratch[6], luminanceBits);
+            Hlsl.InterlockedMax(ref groupScratch[7], luminanceBits);
         }
+        Hlsl.GroupMemoryBarrierWithGroupSync();
+
+        if (GroupIds.Index != 0)
+            return;
+        Hlsl.InterlockedAdd(ref scratch[0], groupScratch[0]);
+        Hlsl.InterlockedXor(ref scratch[1], groupScratch[1]);
+        Hlsl.InterlockedMin(ref scratch[2], groupScratch[2]);
+        Hlsl.InterlockedMin(ref scratch[3], groupScratch[3]);
+        Hlsl.InterlockedMax(ref scratch[4], groupScratch[4]);
+        Hlsl.InterlockedMax(ref scratch[5], groupScratch[5]);
+        Hlsl.InterlockedMin(ref scratch[6], groupScratch[6]);
+        Hlsl.InterlockedMax(ref scratch[7], groupScratch[7]);
     }
 }
 
