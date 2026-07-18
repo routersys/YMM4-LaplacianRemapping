@@ -1,0 +1,154 @@
+name: リリース
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: ソースコードのチェックアウト
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: .NET SDKのセットアップ
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: fxc.exeの検索
+        id: fxc
+        shell: pwsh
+        run: |
+          $fxc = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "fxc.exe" |
+            Where-Object { $_.FullName -like "*x64*" } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+          if (-not $fxc) {
+            Write-Error "fxc.exeが見つかりませんでした。"
+            exit 1
+          }
+          Write-Host "fxc.exeの場所: $($fxc.FullName)"
+          echo "FXC_PATH=$($fxc.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: YMM4最新リリースの取得と解凍
+        id: ymm4
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/manju-summoner/YukkuriMovieMaker4/releases/latest" `
+            -Headers @{ "User-Agent" = "LaplacianRemapping-CI" }
+          $asset = $release.assets | Where-Object { $_.name -like "*_Lite.zip" } | Select-Object -First 1
+          if (-not $asset) {
+            $asset = $release.assets | Where-Object { $_.name -like "*.zip" } | Select-Object -First 1
+          }
+          if (-not $asset) {
+            Write-Error "YMM4のリリースにZIPファイルが見つかりませんでした。"
+            exit 1
+          }
+          Write-Host "ダウンロード対象: $($asset.name)"
+          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile "ymm4.zip"
+          Expand-Archive -Path "ymm4.zip" -DestinationPath "ymm4_extracted" -Force
+          $ymm4Dir = (Get-ChildItem -Path "ymm4_extracted" -Recurse -Filter "YukkuriMovieMaker.dll" |
+            Select-Object -First 1).DirectoryName
+          if (-not $ymm4Dir) {
+            Write-Error "YukkuriMovieMaker.dllが見つかりませんでした。"
+            exit 1
+          }
+          Write-Host "YMM4 DLLディレクトリ: $ymm4Dir"
+          echo "YMM4_DIR=$ymm4Dir\" >> $env:GITHUB_OUTPUT
+
+      - name: タグ名からバージョンを取得
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          echo "TAG=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: resxファイルの生成
+        shell: pwsh
+        run: |
+          $proj = "LaplacianRemapping/LaplacianRemapping.csproj"
+          dotnet build "$proj" `
+            -c Release `
+            -p:YMM4DirPath="${{ steps.ymm4.outputs.YMM4_DIR }}" `
+            -p:FxcPath="${{ steps.fxc.outputs.FXC_PATH }}" `
+            -p:Platform=x64 `
+            -p:SkipPluginDeploy=true
+
+      - name: プロジェクトのビルド
+        shell: pwsh
+        run: |
+          $proj = "LaplacianRemapping/LaplacianRemapping.csproj"
+          dotnet build "$proj" `
+            -c Release `
+            -p:YMM4DirPath="${{ steps.ymm4.outputs.YMM4_DIR }}" `
+            -p:FxcPath="${{ steps.fxc.outputs.FXC_PATH }}" `
+            -p:Platform=x64 `
+            -p:SkipPluginDeploy=true
+
+      - name: テストプロジェクトのビルド
+        shell: pwsh
+        run: |
+          dotnet build LaplacianRemapping.Tests/LaplacianRemapping.Tests.csproj `
+            -c Release `
+            -p:YMM4DirPath="${{ steps.ymm4.outputs.YMM4_DIR }}" `
+            -p:FxcPath="${{ steps.fxc.outputs.FXC_PATH }}" `
+            -p:Platform=x64 `
+            -p:SkipPluginDeploy=true `
+            -maxcpucount:1
+
+      - name: テストの実行
+        shell: pwsh
+        run: |
+          dotnet test LaplacianRemapping.Tests/LaplacianRemapping.Tests.csproj `
+            --no-build `
+            --no-restore `
+            -c Release `
+            -p:Platform=x64 `
+            -p:SkipPluginDeploy=true
+
+      - name: パッケージの作成
+        id: package
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.TAG }}"
+          $outDir = "LaplacianRemapping/bin/x64/Release/net10.0-windows10.0.19041.0"
+          $stageRoot = "stage/LaplacianRemapping"
+          $pkgName = "LaplacianRemapping_$version.ymme"
+
+          New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
+          New-Item -ItemType Directory -Path "$stageRoot/LICENSE" -Force | Out-Null
+
+          Copy-Item "$outDir/LaplacianRemapping.dll" "$stageRoot/"
+          Copy-Item "$outDir/LaplacianRemapping.ComputeSharp.dll" "$stageRoot/"
+          Copy-Item "$outDir/LaplacianRemapping.ComputeSharp.Core.dll" "$stageRoot/"
+
+          foreach ($lang in @("ar-sa", "en-us", "es-es", "id-id", "ko-kr", "zh-cn", "zh-tw")) {
+            $src = "$outDir/$lang"
+            if (Test-Path $src) {
+              New-Item -ItemType Directory -Path "$stageRoot/$lang" -Force | Out-Null
+              Copy-Item "$src/*.dll" "$stageRoot/$lang/"
+            }
+          }
+
+          Copy-Item ".github/LICENSE/*.txt" "$stageRoot/LICENSE/"
+          Copy-Item ".github/Plugin_Readme.txt" "$stageRoot/Readme.txt"
+
+          Compress-Archive -Path "stage/*" -DestinationPath $pkgName -CompressionLevel Optimal
+          echo "PKG_NAME=$pkgName" >> $env:GITHUB_OUTPUT
+
+      - name: GitHubリリースの作成
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.TAG }}
+          body_path: .github/CHANGELOG.md
+          files: ${{ steps.package.outputs.PKG_NAME }}
+          draft: false
+          prerelease: false
