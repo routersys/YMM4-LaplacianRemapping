@@ -1,4 +1,20 @@
 <Solution>
-  <Project Path="LaplacianRemapping/LaplacianRemapping.csproj" />
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="ComputeSharp/src/ComputeSharp.Core/ComputeSharp.Core.csproj">
+    <Platform Solution="*|x64" Project="Any CPU" />
+  </Project>
+  <Project Path="ComputeSharp/src/ComputeSharp.Core.SourceGenerators/ComputeSharp.Core.SourceGenerators.csproj" />
+  <Project Path="ComputeSharp/src/ComputeSharp/ComputeSharp.csproj">
+    <Platform Solution="*|x64" Project="Any CPU" />
+  </Project>
+  <Project Path="ComputeSharp/src/ComputeSharp.SourceGenerators/ComputeSharp.SourceGenerators.csproj" />
+  <Project Path="LaplacianRemapping/LaplacianRemapping.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="LaplacianRemapping.Tests/LaplacianRemapping.Tests.csproj" />
+  <Project Path="LaplacianRemapping.Harness/LaplacianRemapping.Harness.csproj" />
   <Project Path="YukkuriMovieMaker.Generator/YukkuriMovieMaker.Generator/YukkuriMovieMaker.Generator.csproj" />
 </Solution>
