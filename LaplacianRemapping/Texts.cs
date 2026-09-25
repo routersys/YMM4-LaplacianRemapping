@@ -1,10 +1,8 @@
 using YukkuriMovieMaker.Generator;
 
-namespace LaplacianRemapping
-{
-    [AutoGenLocalizer]
-    partial class Texts
-    {
+namespace LaplacianRemapping;
 
-    }
+[AutoGenLocalizer]
+partial class Texts
+{
 }
